@@ -16,6 +16,9 @@
 			membershipExceptions = (
 				Info.plist,
 			);
+			platformFiltersByRelativePath = {
+				StoreKit.storekit = (ios, );
+			};
 			target = 94FE76E22EB3E8940028E3D0 /* UniverseTest */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */

@@ -154,6 +154,13 @@ class SaleView: UIView {
     
     var onSubscribeTapped: (() -> Void)?
     
+    var isLoading: Bool = false {
+        didSet {
+            subscribeBtn.isEnabled = !isLoading
+            subscribeBtn.setTitle(isLoading ? "Processing..." : "Subscribe Now", for: .normal)
+        }
+    }
+    
     
 //    SETUP
     

@@ -12,7 +12,10 @@ import StoreKit
 @MainActor
 class SubscriptionManager: ObservableObject {
     
-    private var product: Product?
+    @Published var isLoading: Bool = false
+    @Published var isSubscribed: Bool = false
+    
+    private(set) var product: Product?
     private var updatesTask: Task<Void, Never>?
     
     
@@ -21,6 +24,9 @@ class SubscriptionManager: ObservableObject {
     
     init() {
         updatesTask = observeTransactionUpdates()
+        Task {
+            await checkSubscriptionStatus()
+        }
     }
     
     
@@ -29,17 +35,49 @@ class SubscriptionManager: ObservableObject {
     }
     
     
+//    func loadSubscriptionProduct() async throws -> Product {
+//        
+//        let products = try await Product.products(for: [subscriptionProductID])
+//        
+//        guard let product = products.first else {
+//            throw SubscriptionError.productNotFound
+//        }
+//        
+//        self.product = product
+//        return product
+//        
+//    }
+    
     func loadSubscriptionProduct() async throws -> Product {
+        print("🔍 [StoreKit Debug] Starting product load...")
+        print("🔍 [StoreKit Debug] Product ID: '\(subscriptionProductID)'")
+        print("🔍 [StoreKit Debug] Bundle ID: '\(Bundle.main.bundleIdentifier ?? "unknown")'")
         
         let products = try await Product.products(for: [subscriptionProductID])
         
+        print("🔍 [StoreKit Debug] Found \(products.count) products")
+        
+        for (index, product) in products.enumerated() {
+            print("🔍 [StoreKit Debug] Product \(index):")
+            print("   - ID: '\(product.id)'")
+            print("   - Name: '\(product.displayName)'")
+            print("   - Price: '\(product.displayPrice)'")
+            print("   - Type: '\(product.type)'")
+        }
+        
         guard let product = products.first else {
+            print("❌ [StoreKit Debug] ERROR: No product found!")
+            print("❌ Possible causes:")
+            print("   1. StoreKit.config not in scheme")
+            print("   2. Wrong product ID")
+            print("   3. StoreKit file not in target")
+            print("   4. Need to clean/restart Xcode")
             throw SubscriptionError.productNotFound
         }
         
+        print("✅ [StoreKit Debug] SUCCESS: Product loaded!")
         self.product = product
         return product
-        
     }
     
     
@@ -55,6 +93,11 @@ class SubscriptionManager: ObservableObject {
             
             case .success(let verification):
                 let transaction = try checkVerified(verification)
+            
+                await MainActor.run {
+                    self.isSubscribed = true
+                }
+            
                 await transaction.finish()
                 return transaction
                 
@@ -79,11 +122,21 @@ class SubscriptionManager: ObservableObject {
             
             if case .verified(let transaction) = entitlement {
                 if transaction.productID == subscriptionProductID {
-                    return transaction.revocationDate == nil && !transaction.isUpgraded
+                    let isActive = transaction.revocationDate == nil && !transaction.isUpgraded
+                    
+                    await MainActor.run {
+                        self.isSubscribed = isActive
+                    }
+                    
+                    return isActive
                 }
             }
             
             
+        }
+        
+        await MainActor.run {
+            self.isSubscribed = false
         }
         
         return false
@@ -92,7 +145,10 @@ class SubscriptionManager: ObservableObject {
     
     
     func restorePurchases() async throws {
+        
         try await AppStore.sync()
+        await checkSubscriptionStatus()
+        
     }
     
     
@@ -103,7 +159,10 @@ class SubscriptionManager: ObservableObject {
             for await update in Transaction.updates {
                 
                 if case .verified(let transaction) = update {
+                    
+                    await self.checkSubscriptionStatus()
                     await transaction.finish()
+                    
                 }
                 
             }

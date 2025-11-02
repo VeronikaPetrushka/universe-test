@@ -292,26 +292,43 @@ class CardsViewController: UIViewController {
         
         do {
             
-            showLoadingIndicator()
+            await MainActor.run {
+                self.subscriptionManager.isLoading = true
+            }
             
-            let product = try await subscriptionManager.loadSubscriptionProduct()
-            print("Product loaded: \(product.displayName) - \(product.displayPrice)")
+            // Load product if not already loaded
+            if subscriptionManager.product == nil {
+                _ = try await subscriptionManager.loadSubscriptionProduct()
+            }
             
+            // Attempt purchase
             let transaction = try await subscriptionManager.purchaseSubscription()
             
-            hideLoadingIndicator()
-            
-            showSuccessAlert()
+            // Success
+            await MainActor.run {
+                self.subscriptionManager.isLoading = false
+            }
             
             print("Purchase successful: \(transaction)")
             
+            // Show success and navigate
+            showSuccessAlert()
+            
         } catch SubscriptionError.userCancelled {
-            hideLoadingIndicator()
+            
+            await MainActor.run {
+                self.subscriptionManager.isLoading = false
+            }
+            print("User cancelled purchase")
             
         } catch {
-            hideLoadingIndicator()
-            showErrorAlert(error: error)
+            
+            await MainActor.run {
+                self.subscriptionManager.isLoading = false
+            }
             print("Purchase failed: \(error.localizedDescription)")
+            showErrorAlert(error: error)
+            
         }
         
     }
