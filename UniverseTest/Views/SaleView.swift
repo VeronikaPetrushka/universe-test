@@ -176,6 +176,17 @@ class SaleView: UIView {
         addSubview(subscribeBtn)
         addSubview(termsLink)
         
+        let screenHeight = UIScreen.main.bounds.height
+            
+        let imageMultiplier: CGFloat
+        if screenHeight <= 667 {
+            imageMultiplier = 0.8
+        } else if screenHeight <= 812 {
+            imageMultiplier = 0.9
+        } else {
+            imageMultiplier = 1.0
+        }
+        
         NSLayoutConstraint.activate([
             
 //          sale image
@@ -183,7 +194,7 @@ class SaleView: UIView {
             imageVw.topAnchor.constraint(equalTo: topAnchor),
             imageVw.leadingAnchor.constraint(equalTo: leadingAnchor),
             imageVw.trailingAnchor.constraint(equalTo: trailingAnchor),
-            imageVw.heightAnchor.constraint(equalTo: widthAnchor, multiplier: 1),
+            imageVw.heightAnchor.constraint(equalTo: widthAnchor, multiplier: imageMultiplier),
             
 //           cancel sale button
             
@@ -206,7 +217,7 @@ class SaleView: UIView {
             
 //          subscribe button
             
-            subscribeBtn.topAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -100),
+            subscribeBtn.topAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: screenHeight <= 667 ? -150 : -110),
             subscribeBtn.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
             subscribeBtn.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
             

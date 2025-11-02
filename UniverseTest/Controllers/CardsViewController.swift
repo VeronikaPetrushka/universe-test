@@ -147,11 +147,18 @@ class CardsViewController: UIViewController {
             
             let btn = UIButton(type: .system)
             btn.setTitle(answer, for: .normal)
-            btn.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            
+            let screenHeight = UIScreen.main.bounds.height
+            
+            let fontSize: CGFloat = screenHeight <= 667 ? 14 : 16
+            btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
+            
             btn.backgroundColor = .white
             btn.setTitleColor(.black, for: .normal)
             btn.layer.cornerRadius = 16
-            btn.heightAnchor.constraint(equalToConstant: 56).isActive = true
+            
+            let buttonHeight: CGFloat = screenHeight <= 667 ? 48 : 56
+            btn.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
             btn.addTarget(self, action: #selector(answerBtnTapped(_:)), for: .touchUpInside)
             
             btn.contentHorizontalAlignment = .left

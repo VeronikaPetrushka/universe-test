@@ -121,7 +121,7 @@ class CardView: UIView {
     
 //            continue button
             
-            continueBtn.topAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -100),
+            continueBtn.topAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -110),
             continueBtn.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
             continueBtn.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
             
