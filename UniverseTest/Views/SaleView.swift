@@ -105,13 +105,13 @@ class SaleView: UIView {
         let attributedString = NSMutableAttributedString(string: "By continuing you accept our:\nTerms of Use, Privacy Policy, Subscription Terms")
         
         let termsRange = (attributedString.string as NSString).range(of: "Terms of Use")
-        attributedString.addAttribute(.link, value: "https://yourapp.com/terms", range: termsRange)
+        attributedString.addAttribute(.link, value: "https://www.freeprivacypolicy.com/live/16f393d8-94f9-4b8f-a6e0-59f84190fef7", range: termsRange)
         
         let privacyRange = (attributedString.string as NSString).range(of: "Privacy Policy")
-        attributedString.addAttribute(.link, value: "https://yourapp.com/privacy", range: privacyRange)
+        attributedString.addAttribute(.link, value: "https://www.freeprivacypolicy.com/live/a732d79f-c973-437a-8a56-16c262074948", range: privacyRange)
         
         let subscriptionRange = (attributedString.string as NSString).range(of: "Subscription Terms")
-        attributedString.addAttribute(.link, value: "https://yourapp.com/subscription", range: subscriptionRange)
+        attributedString.addAttribute(.link, value: "https://www.freeprivacypolicy.com/live/16f393d8-94f9-4b8f-a6e0-59f84190fef7", range: subscriptionRange)
         
         let align = NSMutableParagraphStyle()
         align.alignment = .center
