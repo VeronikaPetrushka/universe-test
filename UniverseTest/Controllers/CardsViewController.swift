@@ -9,6 +9,7 @@ import UIKit
 
 class CardsViewController: UIViewController {
     
+    
 //    INITIALIZE
     
     private let cardsVM = CardsViewModel()
@@ -296,22 +297,18 @@ class CardsViewController: UIViewController {
                 self.subscriptionManager.isLoading = true
             }
             
-            // Load product if not already loaded
             if subscriptionManager.product == nil {
                 _ = try await subscriptionManager.loadSubscriptionProduct()
             }
             
-            // Attempt purchase
             let transaction = try await subscriptionManager.purchaseSubscription()
             
-            // Success
             await MainActor.run {
                 self.subscriptionManager.isLoading = false
             }
             
             print("Purchase successful: \(transaction)")
             
-            // Show success and navigate
             showSuccessAlert()
             
         } catch SubscriptionError.userCancelled {
@@ -356,15 +353,15 @@ class CardsViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
             
-//      navigate to main screen
-            
             self.dismiss(animated: true)
         })
         present(alert, animated: true)
+        
     }
     
     
     private func showErrorAlert(error: Error) {
+        
         let alert = UIAlertController(
             title: "Error",
             message: error.localizedDescription,
@@ -372,8 +369,10 @@ class CardsViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+        
     }
 
+    
 }
 
 

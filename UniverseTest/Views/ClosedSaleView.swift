@@ -67,8 +67,6 @@ class ClosedSaleView: UIView {
     
     private func setupUI() {
         
-        print("closed sale screen !!!!!! ✅")
-        
         backgroundColor = .customLightGray
         alpha = 0
         

@@ -35,49 +35,20 @@ class SubscriptionManager: ObservableObject {
     }
     
     
-//    func loadSubscriptionProduct() async throws -> Product {
-//        
-//        let products = try await Product.products(for: [subscriptionProductID])
-//        
-//        guard let product = products.first else {
-//            throw SubscriptionError.productNotFound
-//        }
-//        
-//        self.product = product
-//        return product
-//        
-//    }
-    
     func loadSubscriptionProduct() async throws -> Product {
-        print("🔍 [StoreKit Debug] ===== STOREKIT DEBUG START =====")
-        print("🔍 [StoreKit Debug] Product ID: '\(subscriptionProductID)'")
-        print("🔍 [StoreKit Debug] Bundle ID: '\(Bundle.main.bundleIdentifier ?? "unknown")'")
-        print("🔍 [StoreKit Debug] App Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "unknown")")
         
-        // Test if StoreKit is even responding
-        let startTime = Date()
+        print("Loading subscription product...")
+        
         let products = try await Product.products(for: [subscriptionProductID])
-        let loadTime = Date().timeIntervalSince(startTime)
         
-        print("🔍 [StoreKit Debug] Load time: \(loadTime) seconds")
-        print("🔍 [StoreKit Debug] Products found: \(products.count)")
-        
-        for product in products {
-            print("🔍 [StoreKit Debug] - Product: \(product.id) -> \(product.displayName)")
-        }
+        print("Found \(products.count) products")
         
         guard let product = products.first else {
-            print("❌ [StoreKit Debug] CRITICAL: StoreKit returned ZERO products")
-            print("❌ [StoreKit Debug] This means:")
-            print("   1. StoreKit.config not loading")
-            print("   2. Product ID mismatch")
-            print("   3. StoreKit testing not enabled")
-            print("🔍 [StoreKit Debug] ===== STOREKIT DEBUG END =====")
+            print("Product not found - check StoreKit configuration")
             throw SubscriptionError.productNotFound
         }
         
-        print("✅ [StoreKit Debug] SUCCESS: Product loaded: \(product.displayName)")
-        print("🔍 [StoreKit Debug] ===== STOREKIT DEBUG END =====")
+        print("Product loaded: \(product.displayName) - \(product.displayPrice)")
         self.product = product
         return product
     }

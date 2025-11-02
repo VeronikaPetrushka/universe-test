@@ -228,7 +228,7 @@ class SaleView: UIView {
     
     
     @objc private func closeBtnTapped() {
-        print("✅ crossBtn tapped!")
+        print("Cancel sale button tapped!")
         onCloseTapped?()
     }
     
