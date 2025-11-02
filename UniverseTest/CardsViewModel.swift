@@ -56,6 +56,7 @@ class CardsViewModel {
                 
                 
                 self?.delegate?.didSucceed()
+                self?.delegate?.didUpdateCurrentCard()
                 
             } catch {
                 self?.delegate?.didFailed(error: error)
@@ -85,12 +86,9 @@ class CardsViewModel {
         delegate?.didUpdateCurrentCard()
     }
     
-//    remove previous later
-    
-//    func goToPreviousCard() {
-//        guard currentCardIndex > 0 else { return }
-//        currentCardIndex -= 1
-//        delegate?.didUpdateCurrentCard()
-//    }
+    func resetToFirstCard() {
+        currentCardIndex = 0
+        selectedAnswers.removeAll()
+    }
     
 }

@@ -9,144 +9,98 @@ import UIKit
 
 class CardsViewController: UIViewController {
     
-    //    INITIALIZE
+//    INITIALIZE
     
     private let cardsVM = CardsViewModel()
-        
-//        init(cardsVM: CardsViewModel) {
-//            self.cardsVM = cardsVM
-//            super.init(nibName: nil, bundle: nil)
-//        }
-        
-//        required init?(coder: NSCoder) {
-//            fatalError("init(coder:) has not been implemented")
-//        }
-    
-    
-//    UI
-    
-    private let pv: UIProgressView = {
-        
-        let pv = UIProgressView()
-        pv.translatesAutoresizingMaskIntoConstraints = false
-        pv.progressTintColor = .systemBlue
-        pv.trackTintColor = .systemGray5
-        return pv
-        
-    }()
-    
-    
-    private let questionLbl: UILabel = {
-        
-        let lbl = UILabel()
-        lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.font = .systemFont(ofSize: 24, weight: .bold)
-        lbl.textColor = .black
-        lbl.numberOfLines = 0
-        lbl.textAlignment = .center
-        return lbl
-        
-    }()
-    
-    
-    private let answersStackVw: UIStackView = {
-        
-        let vw = UIStackView()
-        vw.translatesAutoresizingMaskIntoConstraints = false
-        vw.axis = .vertical
-        vw.spacing = 12
-        return vw
-        
-    }()
-    
-    
-    private let continueBtn: UIButton = {
-        
-        let btn = UIButton(type: .system)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.setTitle("Continue", for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        btn.backgroundColor = .systemBlue
-        btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 12
-        btn.heightAnchor.constraint(equalToConstant: 56).isActive = true
-        btn.isEnabled = false
-        btn.alpha = 0.6
-        return btn
-        
-    }()
-    
+    private let cardVw = CardView()
+    private let saleVw = SaleView()
+    private let subscriptionManager = SubscriptionManager()
+    private let closedSaleVw = ClosedSaleView()
     
     
 // LIFECYCLE
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        cardsVM.getCardsData()
-        setupUI()
+        
+        cardsVM.delegate = self
+        
+        setupCardVw()
         setupActions()
-        updateUI()
+        setupSaleVw()
+        setupClosedSaleVw()
+        
+        cardsVM.getCardsData()
+        
         print("Hey, I'm in !")
     }
     
     
+    
 //    SETUP
     
-    private func setupUI() {
-        view.backgroundColor = .white
+    
+    private func setupCardVw() {
         
-        view.addSubview(pv)
-        view.addSubview(questionLbl)
-        view.addSubview(answersStackVw)
-        view.addSubview(continueBtn)
+        view.addSubview(cardVw)
+        cardVw.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            
-//            progress view
-            
-            pv.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            pv.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, constant: 4),
-            pv.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            pv.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            
-            
-//            question label
-            
-            questionLbl.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 16),
-            questionLbl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            questionLbl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
-            
-//            answer stack view
-            
-            answersStackVw.topAnchor.constraint(equalTo: questionLbl.bottomAnchor, constant: 20),
-            answersStackVw.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            answersStackVw.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
-            
-//            continue button
-            
-            continueBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -82),
-            continueBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            continueBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            
+            cardVw.topAnchor.constraint(equalTo: view.topAnchor),
+            cardVw.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            cardVw.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            cardVw.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+    
         
     }
     
     
+    private func setupSaleVw() {
+        
+        view.addSubview(saleVw)
+        saleVw.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            saleVw.topAnchor.constraint(equalTo: view.topAnchor),
+            saleVw.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            saleVw.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            saleVw.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        
+        saleVw.alpha = 0
+        
+    }
+    
     
     private func setupActions() {
-        continueBtn.addTarget(self, action: #selector(continueBtnTapped), for: .touchUpInside)
+        
+        cardVw.continueBtn.addTarget(self, action: #selector(continueBtnTapped), for: .touchUpInside)
+        
+        saleVw.onCloseTapped = { [weak self] in
+                self?.closeSaleTapped()
+            }
+        
+        saleVw.onSubscribeTapped = { [weak self] in
+                self?.handleSubscribeTapped()
+            }
+        
     }
     
     
     private func updateUI() {
         
-        guard let currentCard = cardsVM.currentCard else { return }
+        print("Updating UI, currentCardIndex: \(cardsVM.currentCardIndex)")
+        print("Total cards: \(cardsVM.cards.count)")
         
-        pv.progress = cardsVM.progress
-        questionLbl.text = currentCard.question
+        guard let currentCard = cardsVM.currentCard else {
+            print("No current card available")
+            return
+        }
+        
+        print("Current card: \(currentCard.question)")
+        
+        cardVw.questionLbl.text = currentCard.question
         
         updateAnswerButtons()
         
@@ -155,9 +109,36 @@ class CardsViewController: UIViewController {
     }
     
     
+    private func showSaleVw() {
+
+        view.bringSubviewToFront(saleVw)
+        
+        UIView.animate(withDuration: 0.3) {
+            self.cardVw.alpha = 0
+            self.saleVw.alpha = 1
+        }
+        
+    }
+    
+    
+    private func setupClosedSaleVw() {
+        
+        view.addSubview(closedSaleVw)
+        closedSaleVw.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            closedSaleVw.topAnchor.constraint(equalTo: view.topAnchor),
+            closedSaleVw.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            closedSaleVw.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            closedSaleVw.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+    }
+    
+    
     private func updateAnswerButtons() {
         
-        answersStackVw.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        cardVw.clearAnswerButtons()
         
         guard let currentCard = cardsVM.currentCard else { return }
         
@@ -166,20 +147,16 @@ class CardsViewController: UIViewController {
             let btn = UIButton(type: .system)
             btn.setTitle(answer, for: .normal)
             btn.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            btn.backgroundColor = .systemGray6
+            btn.backgroundColor = .white
             btn.setTitleColor(.black, for: .normal)
-            btn.layer.cornerRadius = 12
+            btn.layer.cornerRadius = 16
             btn.heightAnchor.constraint(equalToConstant: 56).isActive = true
             btn.addTarget(self, action: #selector(answerBtnTapped(_:)), for: .touchUpInside)
             
-            if answer.lowercased().contains("prefer not to answer") {
-                btn.backgroundColor = .clear
-                btn.setTitleColor(.systemGray, for: .normal)
-                btn.layer.borderWidth = 1
-                btn.layer.borderColor = UIColor.systemGray3.cgColor
-            }
+            btn.contentHorizontalAlignment = .left
+            btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
             
-            answersStackVw.addArrangedSubview(btn)
+            cardVw.addAnswerButton(btn)
         }
         
     }
@@ -188,8 +165,7 @@ class CardsViewController: UIViewController {
     private func updateContinueBtn() {
         
         let hasSelectedAnswer = cardsVM.getSelectedAnswer(for: cardsVM.currentCard?.id ?? 0) != nil
-        continueBtn.isEnabled = hasSelectedAnswer
-        continueBtn.alpha = hasSelectedAnswer ? 1.0 : 0.6
+        cardVw.updateContinueBtn(isEnabled: hasSelectedAnswer)
         
     }
     
@@ -199,31 +175,10 @@ class CardsViewController: UIViewController {
         guard let currentCard = cardsVM.currentCard,
               let selectedAnswer = cardsVM.getSelectedAnswer(for: currentCard.id) else { return }
         
-        for case let btn as UIButton in answersStackVw.arrangedSubviews {
+        for case let btn as UIButton in cardVw.answersStackVw.arrangedSubviews {
             let isSelected = btn.titleLabel?.text == selectedAnswer
-            btn.backgroundColor = isSelected ? .systemBlue : .systemGray
+            btn.backgroundColor = isSelected ? .customGreen : .white
             btn.setTitleColor(isSelected ? .white : .black, for: .normal)
-            
-            
-            if btn.titleLabel?.text?.lowercased().contains("prefer not to answer") == true {
-                
-                if isSelected {
-                    
-                    btn.backgroundColor = .systemBlue
-                    btn.setTitleColor(.white, for: .normal)
-                    btn.layer.borderWidth = 0
-                    
-                } else {
-                    
-                    btn.backgroundColor = .clear
-                    btn.setTitleColor(.systemGray, for: .normal)
-                    btn.layer.borderWidth = 1
-                    btn.layer.borderColor = UIColor.systemGray3.cgColor
-                    
-                }
-                
-            }
-            
             
         }
         
@@ -245,36 +200,172 @@ class CardsViewController: UIViewController {
     @objc private func continueBtnTapped() {
         
         if cardsVM.hasNextCard{
-            cardsVM.goToNextCard()
-            updateUI()
+            UIView.animate(withDuration: 0.25, animations: {
+                self.cardVw.contentStackVw.transform = CGAffineTransform(translationX: -self.view.frame.width, y: 0)
+                self.cardVw.contentStackVw.alpha = 0
+            }) { _ in
+                self.cardsVM.goToNextCard()
+                
+//              new card
+                
+                self.cardVw.contentStackVw.transform = CGAffineTransform(translationX: self.view.frame.width, y: 0)
+                self.updateUI()
+                
+//              slide in new card
+                
+                UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+                    self.cardVw.contentStackVw.transform = .identity
+                    self.cardVw.contentStackVw.alpha = 1
+                })
+            }
         } else  {
-            showCompletionAlert()
+            showSaleVw()
         }
         
     }
     
     
-    private func showCompletionAlert() {
+    @objc private func closeSaleTapped() {
         
-        let alert = UIAlertController(
-            title: "Completed!",
-            message: "You have answered all questions",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        UIView.animate(withDuration: 0.3, animations: {
+            
+            self.saleVw.alpha = 0
+            self.cardVw.alpha = 0
+            
+        }) { _ in
+            
+            self.view.sendSubviewToBack(self.saleVw)
+            self.showClosedSaleVw()
+            
+        }
         
     }
     
 
+    private func handleSubscribeTapped() {
+        
+        Task { @MainActor in
+            await purchaseSubscription()
+        }
+        
+    }
+    
+    
+    private func showClosedSaleVw() {
+        
+        view.bringSubviewToFront(closedSaleVw)
+        closedSaleVw.show()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.hideClosedSaleVw()
+        }
+        
+    }
+    
+    
+    private func hideClosedSaleVw() {
+        
+        closedSaleVw.hide { [weak self] in
+            self?.view.sendSubviewToBack(self!.closedSaleVw)
+            self?.restartOnboardingFlow()
+        }
+        
+    }
+
+    
+    private func restartOnboardingFlow() {
+        
+        cardsVM.resetToFirstCard()
+        
+        cardVw.clearAnswerButtons()
+        
+        UIView.animate(withDuration: 0.5, animations: {
+            self.cardVw.alpha = 1
+        }) { _ in
+            self.updateUI()
+        }
+        
+    }
+    
+    
+    private func purchaseSubscription() async {
+        
+        do {
+            
+            showLoadingIndicator()
+            
+            let product = try await subscriptionManager.loadSubscriptionProduct()
+            print("Product loaded: \(product.displayName) - \(product.displayPrice)")
+            
+            let transaction = try await subscriptionManager.purchaseSubscription()
+            
+            hideLoadingIndicator()
+            
+            showSuccessAlert()
+            
+            print("Purchase successful: \(transaction)")
+            
+        } catch SubscriptionError.userCancelled {
+            hideLoadingIndicator()
+            
+        } catch {
+            hideLoadingIndicator()
+            showErrorAlert(error: error)
+            print("Purchase failed: \(error.localizedDescription)")
+        }
+        
+    }
+    
+    
+    private func showLoadingIndicator() {
+        
+        let alert = UIAlertController(title: "Processing...", message: "Please wait", preferredStyle: .alert)
+        present(alert, animated: true)
+        
+    }
+    
+    
+    private func hideLoadingIndicator() {
+        dismiss(animated: true)
+    }
+    
+    
+    private func showSuccessAlert() {
+        
+        let alert = UIAlertController(
+            title: "Success!",
+            message: "Your subscription has been activated",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            
+//      navigate to main screen
+            
+            self.dismiss(animated: true)
+        })
+        present(alert, animated: true)
+    }
+    
+    
+    private func showErrorAlert(error: Error) {
+        let alert = UIAlertController(
+            title: "Error",
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
 }
+
 
 
 extension CardsViewController: CardsViewModelDelegate {
     
     
     func didSucceed() {
-        updateUI()
+        print("Data loaded successfully!")
     }
     
     
@@ -297,13 +388,18 @@ extension CardsViewController: CardsViewModelDelegate {
     
     
     func didCompleteAllCards() {
-        showCompletionAlert()
+        showSaleVw()
     }
     
     
-//    func setup() {
-//        self.view.backgroundColor = .white
-//    }
-    
-    
+}
+
+
+//      CUSTOM COLORS
+
+extension UIColor {
+    static let customGreen = UIColor(red: 71/255, green: 190/255, blue: 154/255, alpha: 1.0) // #47BE9A
+    static let customLightGray = UIColor(red: 241/255, green: 241/255, blue: 245/255, alpha: 1.0) // #F1F1F5
+    static let customMediumGray = UIColor(red: 202/255, green: 202/255, blue: 202/255, alpha: 1.0) // #CACACA
+    static let customDarkGray = UIColor(red: 110/255, green: 110/255, blue: 115/255, alpha: 1.0) // #6E6E73
 }
